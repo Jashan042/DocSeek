@@ -38,44 +38,7 @@ def clean_text(text:str) -> str:
     return res.strip()
 
 
-def chunk_text(text: str, chunk_size: int = 200, overlap: int = 40) -> list[str]:
-    """
-    Breaks the text into smaller chunks with overlap
 
-    Returns:
-        list of chunks
-    """
-
-    
-    if chunk_size <= 0 or overlap < 0 or overlap >= chunk_size:
-        raise ValueError("Invalid chunk size or overlap")
-    
-    result = []
-
-    if not text.split(): return []
-
-    step = chunk_size - overlap
-
-    words = text.split()
-   
-
-    start = 0
-    end = chunk_size
-
-
-    while start < len(words):
-        chunk = words[start:end]
-        result.append(" ".join(chunk))
-
-        if end >= len(words):
-            break
-
-        start += step
-        end += step
- 
-
-
-    return result
 
     
 
@@ -83,23 +46,5 @@ def chunk_text(text: str, chunk_size: int = 200, overlap: int = 40) -> list[str]
 
 
 
-
-if __name__ == "__main__":
-
-    text = (
-        "The quick brown fox jumps over the lazy dog "
-        "near the river where the birds are singing."
-    )
-
-    chunks = chunk_text(text, chunk_size=5, overlap=2)
-
-    print(f"Original text: {text}")
-    print(f"Total words: {len(text.split())}")
-    print(f"Number of chunks: {len(chunks)}")
-
-    for i, chunk in enumerate(chunks, start=1):
-        print(f"\nChunk {i}:")
-        print(chunk)
-        print(f"Word count: {len(chunk.split())}")
 
 
