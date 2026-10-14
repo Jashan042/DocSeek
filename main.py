@@ -1,6 +1,8 @@
 from src.pdf_processor import extract_pdf, clean_text
 from src.chunker import chunk_text
 from src.vector_store import build_index, semantic_search
+from src.bm25_search import build_bm25_index, bm25_search
+from src.hybrid_search import hybrid_search
 
 pdf = extract_pdf(
     "data/pdf/The Best Optimizer Depends on Batch Size.pdf"
@@ -85,3 +87,35 @@ for rank, result in enumerate(results, start=1):
     print(f"Page: {result['page']}")
     print(f"Similarity: {result['score']:.4f}")
     print(f"Text: {result['text'][:300]}")
+
+
+bm25 = build_bm25_index(chunks)
+
+query = "How does batch size affect model training?"
+
+results = bm25_search(query, bm25, chunks, k=5)
+
+for rank, result in enumerate(results, start=1):
+    print(f"\nResult {rank}")
+    print(f"Document: {result['document']}")
+    print(f"Page: {result['page']}")
+    print(f"BM25 Score: {result['score']:.4f}")
+    print(f"Text: {result['text'][:300]}")
+
+
+    results = hybrid_search(
+    query="How does batch size affect training?",
+    model=model,
+    index=index,
+    bm25=bm25,
+    chunks=chunks,
+    k=5
+)
+
+for rank, result in enumerate(results, start=1):
+    print(
+        f"{rank}. Chunk {result['chunk_id']} | "
+        f"Page {result['page']} | "
+        f"RRF: {result['score']:.5f}"
+    )
+    print(result['text'][:200])
