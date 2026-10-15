@@ -1,121 +1,99 @@
+
+from pathlib import Path
+import json
+
 from src.pdf_processor import extract_pdf, clean_text
 from src.chunker import chunk_text
-from src.vector_store import build_index, semantic_search
-from src.bm25_search import build_bm25_index, bm25_search
+from src.embeddings import generate_embeddings
+from src.vector_store import build_index
+from src.bm25_search import build_bm25_index
+
+from src.embeddings import model
+from src.vector_store import semantic_search
+from src.bm25_search import bm25_search
 from src.hybrid_search import hybrid_search
 
-pdf = extract_pdf(
-    "data/pdf/The Best Optimizer Depends on Batch Size.pdf"
-)
+from src.collect_results import collect_results
 
-i = 0
-chunks = []
-for page in (pdf):
-    cleaned_text = clean_text(page['text'])
+pdf_folder = Path("data/pdf")
 
-    chunked_text = chunk_text(cleaned_text)
+pdf_paths = sorted(pdf_folder.glob("*.pdf"))
 
-    for text in chunked_text:
-        chunk = {}
-        chunk['chunk_id'] = i
-        i+=1
-        chunk['document'] = page['document']
-        chunk['page'] = page['page']
-        chunk['text'] = text
-        chunks.append(chunk)
+all_chunks = []
+chunk_id = 0
+
+for pdf_path in pdf_paths:
+
+    print(f"\nProcessing: {pdf_path.name}")
+
+    pages = extract_pdf(str(pdf_path))
+    document_count = 0
+
+    for page in pages:
+
+        cleaned_text = clean_text(page["text"])
+        chunked_text = chunk_text(cleaned_text)
+
+        for text in chunked_text:
+
+            chunk = {
+                "chunk_id": chunk_id,
+                "document": pdf_path.name,
+                "page": page["page"],
+                "text": text
+            }
+
+            all_chunks.append(chunk)
+            chunk_id += 1
+            document_count += 1
+
+    print(f"Generated {document_count} chunks")
+
+print(f"\nTotal documents: {len(pdf_paths)}")
+print(f"Total chunks: {len(all_chunks)}")
+
+# Verify unique chunk IDs
+ids = [chunk["chunk_id"] for chunk in all_chunks]
+
+assert len(ids) == len(set(ids)), "Duplicate IDs found!"
+assert all(chunk["text"].strip() for chunk in all_chunks)
+
+# Save chunk metadata
+output_folder = Path("data/evaluation")
+output_folder.mkdir(parents=True, exist_ok=True)
+
+with open(output_folder / "chunks.json", "w", encoding="utf-8") as f:
+    json.dump(all_chunks, f, indent=2, ensure_ascii=False)
+
+print("All chunks saved successfully!")
 
 
+# Generate embeddings for all documents
+embeddings = generate_embeddings(all_chunks)
 
-
-
-print(f"Extracted {len(pdf)} pages")
-
-print(f"Extracted {len(pdf)} pages")
-print(f"Generated {len(chunks)} chunks")
-
-for chunk in chunks[:3]:
-    print(f"\nChunk ID: {chunk['chunk_id']}")
-    print(f"Document: {chunk['document']}")
-    print(f"Page: {chunk['page']}")
-    print(f"Text: {chunk['text'][:200]}")
-
-assert len(chunks) > 0, "No chunks generated!"
-assert all(c["text"].strip() for c in chunks), "Empty chunk found!"
-assert all(len(c["text"].split()) <= 200 for c in chunks), "Chunk too large!"
-assert all(c["page"] >= 1 for c in chunks), "Invalid page number!"
-assert len(set(c["chunk_id"] for c in chunks)) == len(chunks), "Duplicate IDs!"
-
-print("All tests passed!")
-
-from src.embeddings import generate_embeddings
-
-embeddings = generate_embeddings(chunks)
-
-print("Total chunks:", len(chunks))
-print("Embedding shape:", embeddings.shape)
-
-assert embeddings.shape[0] == len(chunks)
-assert embeddings.shape[1] == 384
-
-print("All embedding tests passed!")
-
+# Build the combined FAISS index
 index = build_index(embeddings)
 
-print("Vectors stored:", index.ntotal)
-print("Embedding dimensions:", index.d)
+# Build the combined BM25 index
+bm25 = build_bm25_index(all_chunks)
 
-assert index.ntotal == len(chunks)
-assert index.d == 384
+print("Embedding shape:", embeddings.shape)
+print("FAISS vectors:", index.ntotal)
+print("BM25 documents:", bm25.corpus_size)
+
+assert index.ntotal == len(all_chunks)
+assert bm25.corpus_size == len(all_chunks)
 
 
-from src.vector_store import semantic_search
-from src.embeddings import model
 
-query = "How does batch size affect model training?"
+with open("data/evaluation/queries.json", encoding="utf-8") as f:
+    queries = json.load(f)
 
-results = semantic_search(
-    query=query,
-    model=model,
-    index=index,
-    chunks=chunks,
-    k=5
+results = collect_results(
+    queries, model, index, bm25, all_chunks
 )
 
-for rank, result in enumerate(results, start=1):
-    print(f"\nResult {rank}")
-    print(f"Document: {result['document']}")
-    print(f"Page: {result['page']}")
-    print(f"Similarity: {result['score']:.4f}")
-    print(f"Text: {result['text'][:300]}")
+with open("data/evaluation/search_results.json", "w", encoding="utf-8") as f:
+    json.dump(results, f, indent=2, ensure_ascii=False)
 
-
-bm25 = build_bm25_index(chunks)
-
-query = "How does batch size affect model training?"
-
-results = bm25_search(query, bm25, chunks, k=5)
-
-for rank, result in enumerate(results, start=1):
-    print(f"\nResult {rank}")
-    print(f"Document: {result['document']}")
-    print(f"Page: {result['page']}")
-    print(f"BM25 Score: {result['score']:.4f}")
-    print(f"Text: {result['text'][:300]}")
-
-
-    results = hybrid_search(
-    query="How does batch size affect training?",
-    model=model,
-    index=index,
-    bm25=bm25,
-    chunks=chunks,
-    k=5
-)
-
-for rank, result in enumerate(results, start=1):
-    print(
-        f"{rank}. Chunk {result['chunk_id']} | "
-        f"Page {result['page']} | "
-        f"RRF: {result['score']:.5f}"
-    )
-    print(result['text'][:200])
+print("Evaluation results saved!")
