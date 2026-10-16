@@ -97,3 +97,27 @@ with open("data/evaluation/search_results.json", "w", encoding="utf-8") as f:
     json.dump(results, f, indent=2, ensure_ascii=False)
 
 print("Evaluation results saved!")
+
+
+
+import json
+from src.evaluation import evaluate_search
+
+with open("data/evaluation/queries.json", "r", encoding="utf-8") as f:
+    queries = json.load(f)
+
+with open("data/evaluation/search_results.json", "r", encoding="utf-8") as f:
+    search_results = json.load(f)
+
+results = evaluate_search(queries, search_results)
+
+print(f"{'Method':<15} {'Recall@5':<12} {'MRR@10':<12} {'Queries'}")
+print("-" * 50)
+
+for method, metrics in results.items():
+    print(
+        f"{method:<15} "
+        f"{metrics['recall_at_5']:<12.4f} "
+        f"{metrics['mrr_at_10']:<12.4f} "
+        f"{metrics['queries_evaluated']}"
+    )
