@@ -11,7 +11,7 @@ def generate_embeddings(chunks: list[dict]):
     """
     Create embedding for the PDF chunks
     Returns:
-        embedding vector with (Chunks, 346) dimensions
+        embedding vector with (Chunks, 386) dimensions
     """
 
     texts = [chunk['text'] for chunk in chunks]

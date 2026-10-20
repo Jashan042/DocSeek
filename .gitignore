@@ -4,3 +4,4 @@ __pycache__/
 .env
 data/pdfs/
 .pytest_cache/
+data/uploads/

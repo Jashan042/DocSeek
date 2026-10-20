@@ -31,11 +31,7 @@ def extract_pdf(pdf_path: str) -> list[dict]:
     return pages
 
 def clean_text(text:str) -> str:
-    res = text.replace("\n", " ")
-    res = re.sub(' +', ' ', res)
-    
-    res = re.sub(r"\s+", " ", text)
-    return res.strip()
+    return re.sub(r"\s+", " ", text).strip()
 
 
 
