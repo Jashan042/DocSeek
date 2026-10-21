@@ -1,0 +1,126 @@
+
+.container {
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 30px;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  margin-bottom: 35px;
+}
+
+h1 {
+  margin-bottom: 8px;
+}
+
+section {
+  padding: 25px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+}
+
+input[type="file"] {
+  display: block;
+  margin: 20px 0;
+}
+
+button {
+  padding: 12px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+.search-section {
+  margin-top: 30px;
+}
+
+.search-section form {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 250px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.method-select {
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: #0f172a;
+}
+
+.results-section {
+  margin-top: 30px;
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.result-card {
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.result-header h3 {
+  font-size: 16px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.result-header span {
+  white-space: nowrap;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.result-card p {
+  line-height: 1.7;
+  color: #334155;
+}
+
+.result-card small {
+  color: #64748b;
+}
+
+.error-message {
+  color: crimson;
+  margin-top: 12px;
+}
+
+.search-status {
+  margin-top: 20px;
+  color: #64748b;
+}
+
